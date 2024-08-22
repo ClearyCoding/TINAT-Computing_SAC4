@@ -5,7 +5,7 @@
   </a>
 
 <h3 align="center">Computing 1/2 SAC #4</h3>
-<h4 align="center">TINAT Is Not A Timetabler</h4>
+<h4 align="center">"TINAT Is Not A Timetabler"</h4>
 
   <p align="center">
     By Alexander Cleary
