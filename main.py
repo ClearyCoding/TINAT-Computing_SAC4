@@ -1,6 +1,7 @@
 import sqlite3
-
 database = "tinat_planner.db"
+
+# Format [Query Name, Query (without variables to be added by the user), Variable, Result Headings]
 commands = [
     ["Query Lines in a Network", "SELECT Line.Name, Line.Gauge, Line.Electrified FROM Line WHERE Line.NetworkID = ",
      "Network", ["Line Name", "Gauge", "Electrified"]],
@@ -23,6 +24,7 @@ commands = [
 ]
 
 
+# Sends Query to SQLite
 def query(command):
     connection = sqlite3.connect(database)
     cursor = connection.cursor()
@@ -32,9 +34,12 @@ def query(command):
     return outline
 
 
+# Adds user input to queries before export
 def configure_query(query_id):
     table = commands[query_id][2]
     amend = ""
+
+    # Date selection
     if table == "Cut-Off":
         while True:
             try:
@@ -44,6 +49,8 @@ def configure_query(query_id):
             else:
                 break
         amend = year
+
+    # Selection from another table
     else:
         table_options = (query("SELECT Name FROM " + table))
         for i, entry in enumerate(table_options):
@@ -59,13 +66,15 @@ def configure_query(query_id):
                 else:
                     print("Value is out of range")
         amend = option + 1
+
+    # Returns the full query with the variable amended to the end
     return commands[query_id][1] + str(amend) + ";"
 
 
+# Query Selection Interface
 print("Commands:")
 for i, entry in enumerate(commands):
     print(f'{i} : {entry[0]}')
-
 while True:
     selection = 0
     try:
@@ -78,9 +87,13 @@ while True:
         else:
             print("Value is out of range")
 
+# Allows the user to select options for their command
 query_filled = configure_query(selection)
+
+# Fetches the results
 results = query(query_filled)
 
+# Displays the results
 print("\nResults:")
 header_bar = "("
 for header in commands[selection][3]:
