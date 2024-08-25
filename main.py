@@ -61,6 +61,7 @@ def configure_query(query_id):
         amend = option + 1
     return commands[query_id][1] + str(amend) + ";"
 
+
 print("Commands:")
 for i, entry in enumerate(commands):
     print(f'{i} : {entry[0]}')
