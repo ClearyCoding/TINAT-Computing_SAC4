@@ -1,24 +1,26 @@
 import sqlite3
-# import pygame
 
 database = "tinat_planner.db"
-commands = {
-    "Query Lines in a Network": "SELECT Line.Name, Line.Gauge, Line.Electrified FROM Line WHERE Line.NetworkID = <NetworkID>;",
-    "Query Models produced by a Manufacturer": "SELECT Model.Name FROM Model WHERE Model.ManufacturerID = "
-                                               "<ManufacturerID>;",
-    "Query Train ages": "SELECT Train.TrainID, Train.Built FROM Train WHERE Train.Built < <Cutoff Date>;",
-    "Query Accessible Stations on a Line (multi-table)": "SELECT Station.Name, Station.Accessible, Station.Staffed "
-                                                         "FROM Station JOIN StationAllocation ON Station.StationID = "
-                                                         "StationAllocation.StationID WHERE StationAllocation.LineID "
-                                                         "= <LineID>;",
-    "Query Lines and Train types through a Station (multi-table)": "SELECT DISTINCT Line.LineID, Model.ModelName FROM "
-                                                                   "Line JOIN StationAllocation ON Line.LineID = "
-                                                                   "StationAllocation.LineID JOIN TrainAllocation ON "
-                                                                   "Line.LineID = TrainAllocation.LineID JOIN Train "
-                                                                   "ON TrainAllocation.TrainID = Train.TrainID JOIN "
-                                                                   "Model ON Train.ModelID = Model.ModelID WHERE "
-                                                                   "StationAllocation.StationID = <StationID>;",
-}
+commands = [
+    ["Query Lines in a Network", "SELECT Line.Name, Line.Gauge, Line.Electrified FROM Line WHERE Line.NetworkID = ",
+     "Network", ["Line Name", "Gauge", "Electrified"]],
+    ["Query Models produced by a Manufacturer", "SELECT Model.Name FROM Model WHERE Model.ManufacturerID = ",
+     "Manufacturer", ["Model Name"]],
+    ["Query Train built before a date", "SELECT Train.CarriageID, Train.Built FROM Train WHERE Train.Built < ",
+                                        "Cut-Off", ["Carriage ID", "Date Built"]],
+    ["Query Accessible Stations on a Line (multi-table)", "SELECT Station.Name, Station.Staffed "
+                                                          "FROM Station JOIN StationAllocation ON Station.StationID = "
+                                                          "StationAllocation.StationID WHERE Station.accessible = 1 "
+                                                          "AND StationAllocation.LineID = ", "Line",
+                                                          ["Station Name", "Staffed"]],
+    #["Query Lines and Train types through a Station (multi-table)", "SELECT Line.LineID, Model.Name FROM "
+    #                                                                "Line JOIN StationAllocation ON Line.LineID = "
+    #                                                                "StationAllocation.LineID JOIN TrainAllocation ON "
+    #                                                                "Line.LineID = TrainAllocation.LineID JOIN Train "
+    #                                                                "ON TrainAllocation.TrainID = Train.TrainID JOIN "
+    #                                                                "Model ON Train.ModelID = Model.ModelID WHERE "
+    #                                                                "StationAllocation.StationID = ", "Station"],
+]
 
 
 def query(command):
@@ -30,13 +32,64 @@ def query(command):
     return outline
 
 
+def configure_query(query_id):
+    table = commands[query_id][2]
+    amend = ""
+    if table == "Cut-Off":
+        while True:
+            try:
+                year = int(input("Enter Cut-Off Date (YYYY): "))
+            except ValueError:
+                print("Value must be an integer")
+            else:
+                break
+        amend = year
+    else:
+        table_options = (query("SELECT Name FROM " + table))
+        for i, entry in enumerate(table_options):
+            print(f'{i} : {entry[0]}')
+        while True:
+            try:
+                option = int(input(f"Enter {table} Option: "))
+            except ValueError:
+                print("Value must be an integer")
+            else:
+                if 0 <= option < len(table_options):
+                    break
+                else:
+                    print("Value is out of range")
+        amend = option + 1
+    return commands[query_id][1] + str(amend) + ";"
+
 print("Commands:")
-for i, entry in enumerate(commands.keys()):
-    print(f'{i + 1} : {entry}')
+for i, entry in enumerate(commands):
+    print(f'{i} : {entry[0]}')
 
 while True:
+    selection = 0
     try:
         selection = int(input("Command ID: "))
-        print(query(commands[selection + 1]))
     except ValueError:
         print("Value must be an integer")
+    else:
+        if 0 <= selection < len(commands):
+            break
+        else:
+            print("Value is out of range")
+
+query_filled = configure_query(selection)
+results = query(query_filled)
+
+print("\nResults:")
+header_bar = "("
+for header in commands[selection][3]:
+    header_bar += f"{header},    "
+header_bar = header_bar[:-5] + ")"
+print(header_bar)
+if results:
+    for i, result in enumerate(results):
+        for column in result:
+            print(f"{column}    ", end="")
+        print("")
+else:
+    print("No Results Found")
